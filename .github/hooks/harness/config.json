@@ -1,0 +1,75 @@
+{
+  "$comment": "Harness configuration. This file is reviewed code: the agent may only reference goal checks by name, never supply its own command. Lives in a subfolder because every *.json directly inside .github/hooks/ is parsed as a hook configuration.",
+  "goal": {
+    "maxTurns": 20,
+    "judgeAgent": "goal-judge",
+    "relayAfterMissingVerdicts": 2,
+    "checkTimeoutSec": 300,
+    "checks": {
+      "$comment": "Named commands that /goal --check <name> may require. Exit code 0 means pass. Examples: \"test\": \"npm test\", \"lint\": \"npm run lint\", \"build\": \"dotnet build --nologo\", \"pytest\": \"python -m pytest -q\""
+    }
+  },
+  "guard": {
+    "enabled": true,
+    "commands": [
+      {
+        "pattern": "\\brm\\s+(?:-[A-Za-z-]+\\s+)*-[A-Za-z]*[rR][A-Za-z]*\\s+(?:-[A-Za-z-]+\\s+)*[\"']?(?:/|~|\\$HOME|\\$\\{HOME\\})/?[\"']?(?:\\s|$)",
+        "decision": "deny",
+        "reason": "Recursive delete of the filesystem root or home directory."
+      },
+      {
+        "pattern": "\\bgit\\s+push\\b[^|;&]*(?:--force(?!-with-lease)|\\s-[A-Za-z]*f\\b)",
+        "decision": "deny",
+        "reason": "Force-push is blocked. Use --force-with-lease on your own branch, or ask the user to do it."
+      },
+      {
+        "pattern": "\\bgit\\s+(?:reset\\s+--hard|clean\\s+-[A-Za-z]*f|checkout\\s+--\\s+\\.|restore\\s+\\.)",
+        "decision": "ask",
+        "reason": "This discards uncommitted work. Confirm with the user first."
+      },
+      {
+        "pattern": "\\b(?:curl|wget)\\b[^|;&]*\\|\\s*(?:sudo\\s+)?(?:ba|z|fi|da)?sh\\b",
+        "decision": "deny",
+        "reason": "Piping a download straight into a shell. Download, inspect, then run."
+      },
+      {
+        "pattern": "--no-verify\\b",
+        "decision": "ask",
+        "reason": "Skipping git hooks hides failing checks. Confirm with the user first."
+      }
+    ],
+    "paths": [
+      {
+        "glob": "**/.env",
+        "access": "any",
+        "decision": "deny",
+        "reason": "Secrets file. Ask the user for the specific value or variable name you need."
+      },
+      {
+        "glob": "**/.env.*",
+        "except": ["**/.env.example", "**/.env.sample", "**/.env.template"],
+        "access": "any",
+        "decision": "deny",
+        "reason": "Secrets file. Ask the user for the specific value or variable name you need."
+      },
+      {
+        "glob": "**/*.pem",
+        "access": "any",
+        "decision": "deny",
+        "reason": "Private key material."
+      },
+      {
+        "glob": ".harness/**",
+        "access": "write",
+        "decision": "deny",
+        "reason": "Harness state is managed by hooks. Use `node .github/hooks/harness/goal.mjs` instead of editing it."
+      },
+      {
+        "glob": ".github/hooks/**",
+        "access": "write",
+        "decision": "ask",
+        "reason": "Hook configuration and scripts are executable code that runs outside the normal approval flow."
+      }
+    ]
+  }
+}

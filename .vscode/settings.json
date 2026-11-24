@@ -1,0 +1,13 @@
+{
+  // Workspace defaults for the harness. Anything that grants permissions (terminal auto-approve,
+  // permission level) is deliberately NOT set here: for Copilot sessions those belong in User
+  // settings or in your organisation's enterprise-managed settings. See docs/enterprise.md.
+
+  // Experimental: in Autopilot mode a second model checks progress against the original request
+  // after each turn. This is the built-in counterpart of /goal; the harness's /goal adds an
+  // explicit condition, named checks and a judge subagent.
+  "chat.autopilot.advanced.enabled": true,
+
+  // Show what each subagent costs in its indicator and hover.
+  "chat.subagents.showCreditUsage": true
+}
